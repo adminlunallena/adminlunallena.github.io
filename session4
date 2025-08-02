@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capacitación Interactiva KYC/LAFT para Casinos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Harmony -->
+    <!-- Application Structure Plan: The SPA is designed as a role-based interactive learning portal. The core architectural choice is a dynamic content filtering system based on user roles (e.g., Cashier, Floor Staff, Supervisor). This structure was chosen because the source report details highly differentiated responsibilities. A one-size-fits-all presentation would be inefficient and overwhelming. The user flow is: 1. Select Role -> 2. Content Adapts -> 3. Explore Sections. Navigation is handled by a top bar linking to key thematic areas: 'Inicio' (Home), 'Marco Normativo' (Regulatory Framework), 'Procedimientos Clave' (Key Procedures), and 'Señales de Alerta' (Red Flags). This design prioritizes usability and targeted learning, ensuring each employee receives precisely the information they need to perform their duties effectively, thus enhancing comprehension and compliance. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Differentiated employee responsibilities. -> Goal: Personalize learning. -> Viz/Method: Interactive role selector (HTML/JS buttons). -> Interaction: Click to filter all page content. -> Justification: Directly addresses the core challenge of the source material, making it relevant and digestible for each user.
+        - Report Info: Key entities supervising the sector (MINCETUR, SBS, etc.). -> Goal: Clarify complex regulatory structure. -> Viz/Method: Bar Chart (Chart.js/Canvas). -> Interaction: Static visualization for quick comprehension. -> Justification: A visual chart is more intuitive for understanding hierarchical or multi-agency relationships than a text list.
+        - Report Info: The process of identifying and reporting suspicious operations. -> Goal: Illustrate the operational workflow. -> Viz/Method: Interactive flowchart (HTML/CSS/JS). -> Interaction: Clicking a step reveals role-specific details. -> Justification: Makes the abstract process tangible and shows how individual roles connect within the larger compliance framework.
+        - Report Info: Monetary threshold for RO (US$ 2,500). -> Goal: Highlight a critical data point. -> Viz/Method: Prominent info card (HTML/CSS). -> Interaction: Static, high-visibility element. -> Justification: Ensures the most critical operational number is impossible to miss.
+        - Report Info: Lists of red flags. -> Goal: Make warning signs memorable. -> Viz/Method: Accordion-style interactive list (HTML/JS). -> Interaction: Click to expand/collapse categories. -> Justification: Breaks down a long list into manageable, categorized chunks, improving readability and retention over a static list.
+        - Library/Method: Chart.js for the bar chart. All other visuals and interactions are built with HTML, Tailwind CSS, and vanilla JavaScript.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f1eb;
+            color: #333;
+        }
+        .nav-button {
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-button:hover, .nav-button.active {
+            color: #1e3a8a;
+            border-bottom-color: #1e3a8a;
+        }
+        .role-button {
+            transition: all 0.3s ease;
+        }
+        .role-button.selected {
+            background-color: #1e3a8a;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+        }
+        .accordion-button {
+            transition: background-color 0.3s ease;
+        }
+        .accordion-button:hover {
+            background-color: #eef2ff;
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-gray-800">Portal de Capacitación KYC/LAFT</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#inicio" class="nav-button px-3 py-2 rounded-md text-sm font-medium text-gray-600">Inicio</a>
+                        <a href="#normativa" class="nav-button px-3 py-2 rounded-md text-sm font-medium text-gray-600">Marco Normativo</a>
+                        <a href="#procedimientos" class="nav-button px-3 py-2 rounded-md text-sm font-medium text-gray-600">Procedimientos Clave</a>
+                        <a href="#alertas" class="nav-button px-3 py-2 rounded-md text-sm font-medium text-gray-600">Señales de Alerta</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        
+        <section id="inicio" class="text-center mb-12">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Bienvenido a la Capacitación de Prevención de Lavado de Activos</h2>
+            <p class="max-w-3xl mx-auto text-lg text-gray-600 mb-8">Esta herramienta interactiva te ayudará a comprender tus responsabilidades específicas en la política "Conoce a tu Cliente" (KYC). Tu rol es fundamental para proteger nuestra integridad.</p>
+            
+            <div class="bg-white p-6 rounded-xl shadow-lg">
+                <h3 class="text-xl font-semibold mb-4 text-gray-800">Primero, selecciona tu puesto para personalizar tu capacitación:</h3>
+                <div id="role-selector" class="flex flex-wrap justify-center gap-3 md:gap-4">
+                    <button data-role="todos" class="role-button selected px-5 py-2.5 bg-gray-200 text-gray-700 font-semibold rounded-lg shadow-sm">Ver Todos</button>
+                    <button data-role="cajero" class="role-button px-5 py-2.5 bg-gray-200 text-gray-700 font-semibold rounded-lg shadow-sm">Personal de Caja</button>
+                    <button data-role="sala" class="role-button px-5 py-2.5 bg-gray-200 text-gray-700 font-semibold rounded-lg shadow-sm">Personal de Sala/Juego</button>
+                    <button data-role="supervisor" class="role-button px-5 py-2.5 bg-gray-200 text-gray-700 font-semibold rounded-lg shadow-sm">Supervisores</button>
+                    <button data-role="seguridad" class="role-button px-5 py-2.5 bg-gray-200 text-gray-700 font-semibold rounded-lg shadow-sm">Seguridad y Vigilancia</button>
+                    <button data-role="gerencia" class="role-button px-5 py-2.5 bg-gray-200 text-gray-700 font-semibold rounded-lg shadow-sm">Gerencia y Directores</button>
+                    <button data-role="oc" class="role-button px-5 py-2.5 bg-gray-200 text-gray-700 font-semibold rounded-lg shadow-sm">Oficial de Cumplimiento</button>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-12 border-gray-300">
+
+        <section id="normativa" class="mb-16 scroll-mt-20">
+            <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-6 text-center">Marco Normativo y Entidades Supervisoras</h2>
+            <p class="text-center max-w-3xl mx-auto text-gray-600 mb-10">El cumplimiento de nuestras políticas no es una opción, es una obligación legal. Conocer las leyes y quién nos supervisa es el primer paso. En Perú, la prevención del Lavado de Activos y Financiamiento del Terrorismo (LA/FT) es una tarea conjunta de varias instituciones.</p>
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+                <div class="card p-6">
+                    <h3 class="font-bold text-xl mb-3 text-blue-900">Leyes y Resoluciones Clave</h3>
+                    <p class="text-gray-600 mb-4">Nuestra operación se rige por un estricto marco legal diseñado para prevenir delitos financieros. Las normas más importantes son:</p>
+                    <ul class="space-y-3">
+                        <li class="flex items-start">
+                            <span class="text-blue-600 mr-3 mt-1">&#10003;</span>
+                            <div>
+                                <strong class="text-gray-800">Ley N° 27153:</strong> La ley fundamental que regula los juegos de casino y tragamonedas, estableciendo las bases para la operación transparente y lícita.
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-blue-600 mr-3 mt-1">&#10003;</span>
+                            <div>
+                                <strong class="text-gray-800">Resolución SBS N° 1695-2016:</strong> La piedra angular de nuestro sistema de prevención. Define qué empresas son "sujetos obligados", establece los umbrales de registro y detalla las obligaciones de capacitación y reporte.
+                            </div>
+                        </li>
+                         <li class="flex items-start">
+                            <span class="text-blue-600 mr-3 mt-1">&#10003;</span>
+                            <div>
+                                <strong class="text-gray-800">Directiva N° 001-2009-MINCETUR/DM:</strong> Complementa la normativa, estableciendo la figura del Oficial de Cumplimiento y reforzando la necesidad de conocer al cliente y al mercado.
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card p-6">
+                    <h3 class="font-bold text-xl mb-3 text-center text-blue-900">Estructura de Supervisión en Perú</h3>
+                    <div class="chart-container">
+                        <canvas id="supervisionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-12 border-gray-300">
+
+        <section id="procedimientos" class="mb-16 scroll-mt-20">
+            <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-6 text-center">Procedimientos Clave y Responsabilidades por Rol</h2>
+            <p class="text-center max-w-3xl mx-auto text-gray-600 mb-10">Aquí aprenderás las acciones concretas que debes realizar según tu puesto. La correcta aplicación de estos procedimientos es nuestra principal línea de defensa.</p>
+            
+            <div class="grid md:grid-cols-3 gap-6 mb-10">
+                <div class="card p-6 text-center">
+                    <h3 class="text-lg font-semibold text-blue-900">Identificación del Cliente</h3>
+                    <p class="text-gray-600 mt-2">Siempre se debe solicitar un documento de identidad válido a los clientes para el ingreso y para transacciones clave.</p>
+                </div>
+                <div class="card p-6 text-center bg-blue-800 text-white">
+                    <h3 class="text-lg font-semibold">Registro de Operaciones (RO)</h3>
+                     <p class="text-blue-100 mt-2">Es obligatorio registrar toda operación individual de canje de fichas o tickets por dinero que iguale o supere los:</p>
+                    <p class="text-4xl font-bold mt-2">US$ 2,500</p>
+                    <p class="text-blue-200 text-sm">(o su equivalente en otra moneda)</p>
+                </div>
+                <div class="card p-6 text-center">
+                    <h3 class="text-lg font-semibold text-blue-900">Registro de Ganadores (REGAP)</h3>
+                    <p class="text-gray-600 mt-2">Se debe registrar la información completa de todo ganador de premios, para tenerla a disposición de los supervisores.</p>
+                </div>
+            </div>
+            
+            <div class="card p-6 md:p-8">
+                <h3 class="font-bold text-xl mb-6 text-center text-blue-900">Flujo de Detección y Reporte de Operaciones Inusuales</h3>
+                <div class="relative">
+                    <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-gray-200 hidden md:block"></div>
+                    <div class="space-y-8">
+                        
+                        <div class="md:flex items-center md:space-x-8">
+                            <div class="md:w-1/2 flex justify-center md:justify-end mb-4 md:mb-0">
+                                <div class="w-16 h-16 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-2xl font-bold">1</div>
+                            </div>
+                            <div class="md:w-1/2">
+                                <div class="bg-white p-4 rounded-lg border border-gray-200">
+                                    <h4 class="font-semibold text-lg text-gray-800 mb-2">Detección Inicial</h4>
+                                    <div class="content-section todos sala cajero">
+                                        <p class="text-gray-600">El personal de <strong class="text-blue-800">Caja</strong> y de <strong class="text-blue-800">Sala</strong> es la primera línea. Deben identificar comportamientos o transacciones que no encajan con el perfil del cliente o la normalidad del negocio (señales de alerta).</p>
+                                    </div>
+                                    <div class="content-section todos seguridad">
+                                         <p class="text-gray-600">El personal de <strong class="text-blue-800">Seguridad</strong> observa comportamientos sospechosos a través de la vigilancia física y de las cámaras, como intercambios extraños o intentos de eludir controles.</p>
+                                    </div>
+                                    <div class="content-section todos supervisor gerencia oc">
+                                        <p class="text-gray-600">La detección puede ocurrir en cualquier nivel. El personal de primera línea es clave, pero todos deben estar atentos.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="md:flex flex-row-reverse items-center md:space-x-8 md:space-x-reverse">
+                            <div class="md:w-1/2 flex justify-center md:justify-start mb-4 md:mb-0">
+                                <div class="w-16 h-16 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-2xl font-bold">2</div>
+                            </div>
+                            <div class="md:w-1/2">
+                                <div class="bg-white p-4 rounded-lg border border-gray-200">
+                                    <h4 class="font-semibold text-lg text-gray-800 mb-2">Comunicación Interna</h4>
+                                    <div class="content-section todos sala cajero seguridad">
+                                        <p class="text-gray-600">Al detectar una operación inusual, debes comunicarla <strong class="text-red-600">de inmediato</strong> a tu <strong class="text-blue-800">Supervisor</strong>. No intentes investigar por tu cuenta. Proporciona todos los detalles de manera clara y objetiva.</p>
+                                    </div>
+                                    <div class="content-section todos supervisor">
+                                        <p class="text-gray-600">Recibes el reporte de tu equipo. Debes analizarlo preliminarmente, validar la información y, si la sospecha se mantiene, escalarlo sin demora al <strong class="text-blue-800">Oficial de Cumplimiento</strong>.</p>
+                                    </div>
+                                    <div class="content-section todos gerencia oc">
+                                        <p class="text-gray-600">El flujo de comunicación interna es crucial para que la información llegue de forma rápida y precisa al Oficial de Cumplimiento.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="md:flex items-center md:space-x-8">
+                            <div class="md:w-1/2 flex justify-center md:justify-end mb-4 md:mb-0">
+                                <div class="w-16 h-16 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-2xl font-bold">3</div>
+                            </div>
+                            <div class="md:w-1/2">
+                                <div class="bg-white p-4 rounded-lg border border-gray-200">
+                                    <h4 class="font-semibold text-lg text-gray-800 mb-2">Análisis y Decisión</h4>
+                                     <div class="content-section todos oc">
+                                        <p class="text-gray-600">Como <strong class="text-blue-800">Oficial de Cumplimiento</strong>, recibes los reportes internos. Tu labor es analizar a fondo la operación, cruzar información, y determinar si califica como "Operación Sospechosa".</p>
+                                    </div>
+                                    <div class="content-section todos sala cajero seguridad supervisor gerencia">
+                                        <p class="text-gray-600">El <strong class="text-blue-800">Oficial de Cumplimiento</strong> es el único responsable de analizar la información y decidir si se debe reportar a las autoridades. Tu rol es proveer la información inicial.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="md:flex flex-row-reverse items-center md:space-x-8 md:space-x-reverse">
+                            <div class="md:w-1/2 flex justify-center md:justify-start mb-4 md:mb-0">
+                                <div class="w-16 h-16 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-2xl font-bold">4</div>
+                            </div>
+                            <div class="md:w-1/2">
+                                <div class="bg-white p-4 rounded-lg border border-gray-200">
+                                    <h4 class="font-semibold text-lg text-gray-800 mb-2">Reporte a la UIF-Perú</h4>
+                                    <div class="content-section todos oc">
+                                        <p class="text-gray-600">Si la operación se considera sospechosa, debes elaborar el Reporte de Operaciones Sospechosas (ROS) y enviarlo a la <strong class="text-blue-800">UIF-Perú</strong> en un plazo de 30 días. Este reporte es confidencial y protegido por ley.</p>
+                                    </div>
+                                    <div class="content-section todos sala cajero seguridad supervisor gerencia">
+                                        <p class="text-gray-600">El proceso culmina con el envío del Reporte de Operaciones Sospechosas (ROS) a la <strong class="text-blue-800">UIF-Perú</strong> por parte del Oficial de Cumplimiento. Este es el resultado final de una detección temprana y un buen trabajo en equipo.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-12 border-gray-300">
+
+        <section id="alertas" class="scroll-mt-20">
+            <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-6 text-center">Señales de Alerta Clave</h2>
+            <p class="text-center max-w-3xl mx-auto text-gray-600 mb-10">Aprender a reconocer estas "banderas rojas" es tu habilidad más importante. Una señal de alerta no prueba un delito, pero es un motivo para prestar más atención y reportar internamente.</p>
+            <div class="max-w-4xl mx-auto">
+                <div id="accordion-container" class="space-y-3">
+                    <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-button w-full flex justify-between items-center text-left p-4 font-semibold text-gray-800">
+                            <span>Relacionadas con la Identificación del Cliente</span>
+                            <span class="accordion-icon text-2xl text-blue-800">+</span>
+                        </button>
+                        <div class="accordion-content px-4 pb-4">
+                            <ul class="list-disc list-inside text-gray-600 space-y-2 pt-2">
+                                <li>Cliente que se niega a proporcionar su documento de identidad o da información evasiva.</li>
+                                <li>Presenta documentos que parecen falsos, alterados o que no le pertenecen.</li>
+                                <li>Intenta realizar operaciones justo por debajo del umbral de US$ 2,500 para evitar ser registrado.</li>
+                                <li>Un tercero intenta realizar una transacción en nombre de un cliente sin poder justificarlo.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-button w-full flex justify-between items-center text-left p-4 font-semibold text-gray-800">
+                            <span>Relacionadas con las Transacciones y el Juego</span>
+                            <span class="accordion-icon text-2xl text-blue-800">+</span>
+                        </button>
+                        <div class="accordion-content px-4 pb-4">
+                            <ul class="list-disc list-inside text-gray-600 space-y-2 pt-2">
+                                <li>Cliente que compra una gran cantidad de fichas, juega muy poco y luego las cambia por dinero.</li>
+                                <li>Usa múltiples métodos de pago (varias tarjetas, efectivo, etc.) sin una razón lógica.</li>
+                                <li>Realiza transacciones de cambio de efectivo por montos elevados y frecuentes.</li>
+                                <li>Muestra un patrón de juego ilógico, como apostar grandes sumas sin interés aparente en el juego.</li>
+                                <li>Compra fichas con grandes cantidades de billetes de baja denominación.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-button w-full flex justify-between items-center text-left p-4 font-semibold text-gray-800">
+                            <span>Relacionadas con el Comportamiento General</span>
+                            <span class="accordion-icon text-2xl text-blue-800">+</span>
+                        </button>
+                        <div class="accordion-content px-4 pb-4">
+                             <ul class="list-disc list-inside text-gray-600 space-y-2 pt-2">
+                                <li>Cliente que muestra nerviosismo inusual al realizar transacciones o al ser preguntado por información.</li>
+                                <li>Demuestra un conocimiento inusual de las políticas de LAFT, preguntando por umbrales o cómo evitar reportes.</li>
+                                <li>Se muestra desinteresado en las ganancias o pérdidas, enfocándose solo en mover el dinero.</li>
+                                <li>Es acompañado o parece ser instruido por terceros.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="accordion-item bg-white rounded-lg shadow-sm content-section todos gerencia oc supervisor">
+                        <button class="accordion-button w-full flex justify-between items-center text-left p-4 font-semibold text-gray-800">
+                            <span>Relacionadas con el Personal (Para Supervisores y Gerencia)</span>
+                            <span class="accordion-icon text-2xl text-blue-800">+</span>
+                        </button>
+                        <div class="accordion-content px-4 pb-4">
+                             <ul class="list-disc list-inside text-gray-600 space-y-2 pt-2">
+                                <li>Empleado que muestra un cambio drástico e inexplicable en su estilo de vida.</li>
+                                <li>Desarrolla una familiaridad inusual o relaciones inapropiadas con ciertos clientes.</li>
+                                <li>Evita tomar vacaciones o se resiste a rotar de puesto.</li>
+                                <li>Oculta información o no sigue los procedimientos de registro de manera consistente.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-800 text-white mt-16">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 text-center text-sm">
+            <p>&copy; 2025 Portal de Capacitación Interna. Todos los derechos reservados.</p>
+            <p class="text-gray-400">Este es un recurso confidencial para el personal autorizado.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const roleSelector = document.getElementById('role-selector');
+            const roleButtons = roleSelector.querySelectorAll('.role-button');
+            const contentSections = document.querySelectorAll('.content-section');
+            const navLinks = document.querySelectorAll('a[href^="#"]');
+            const accordionItems = document.querySelectorAll('.accordion-item');
+
+            function filterContent(selectedRole) {
+                contentSections.forEach(section => {
+                    section.classList.remove('active');
+                    if (section.classList.contains(selectedRole) || selectedRole === 'todos') {
+                        section.classList.add('active');
+                    }
+                });
+
+                roleButtons.forEach(button => {
+                    button.classList.remove('selected');
+                    if (button.dataset.role === selectedRole) {
+                        button.classList.add('selected');
+                    }
+                });
+            }
+
+            roleSelector.addEventListener('click', function (e) {
+                if (e.target.matches('.role-button')) {
+                    const selectedRole = e.target.dataset.role;
+                    filterContent(selectedRole);
+                }
+            });
+
+            navLinks.forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+                    if(targetElement) {
+                        targetElement.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+
+            accordionItems.forEach(item => {
+                const button = item.querySelector('.accordion-button');
+                const content = item.querySelector('.accordion-content');
+                const icon = item.querySelector('.accordion-icon');
+
+                button.addEventListener('click', () => {
+                    const isExpanded = content.style.maxHeight && content.style.maxHeight !== '0px';
+                    
+                    document.querySelectorAll('.accordion-content').forEach(c => c.style.maxHeight = '0px');
+                    document.querySelectorAll('.accordion-icon').forEach(i => i.textContent = '+');
+
+                    if (!isExpanded) {
+                        content.style.maxHeight = content.scrollHeight + 'px';
+                        icon.textContent = '-';
+                    }
+                });
+            });
+
+            const ctx = document.getElementById('supervisionChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['MINCETUR', 'SBS / UIF-Perú', 'SUNAT', 'Mininter'],
+                    datasets: [{
+                        label: 'Rol en la Supervisión',
+                        data: [90, 100, 70, 60],
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.7)',
+                            'rgba(30, 58, 138, 0.7)',
+                            'rgba(239, 68, 68, 0.7)',
+                            'rgba(16, 185, 129, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(59, 130, 246, 1)',
+                            'rgba(30, 58, 138, 1)',
+                            'rgba(239, 68, 68, 1)',
+                            'rgba(16, 185, 129, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    const entity = context.label;
+                                    let details = '';
+                                    if (entity === 'MINCETUR') details = 'Autoriza y fiscaliza la operación.';
+                                    if (entity === 'SBS / UIF-Perú') details = 'Regula y supervisa la prevención de LA/FT.';
+                                    if (entity === 'SUNAT') details = 'Supervisión fiscal y tributaria.';
+                                    if (entity === 'Mininter') details = 'Seguridad y orden público.';
+                                    return details;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                             display: false,
+                        },
+                        y: {
+                           ticks: {
+                                font: {
+                                    size: 14,
+                                    weight: '500'
+                                }
+                           }
+                        }
+                    }
+                }
+            });
+
+            filterContent('todos');
+        });
+    </script>
+</body>
+</html>
