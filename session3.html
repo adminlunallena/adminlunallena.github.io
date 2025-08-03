@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía Interactiva de Cumplimiento PLAFT</title>
+    <!-- Chosen Palette: Corporate Calm -->
+    <!-- Application Structure Plan: Se ha diseñado una aplicación de una sola página con un flujo temático y centrado en el rol del empleado. La estructura sigue un viaje lógico: 1) Introducción al concepto, 2) Detalle de las responsabilidades del empleado, 3) Visualización de la cadena de reporte, 4) Presentación del Oficial de Cumplimiento como un aliado, 5) Una galería interactiva de señales de alerta concretas, y 6) Un resumen de consecuencias y protecciones. Esta estructura se eligió para transformar un informe denso en una herramienta de capacitación práctica y fácil de asimilar, respondiendo a las preguntas clave del usuario ("¿Qué debo hacer?", "¿A quién reporto?", "¿Qué busco?") en lugar de seguir la estructura capitular del informe original. -->
+    <!-- Visualization & Content Choices: 
+        - Responsabilidad (Informar): Tarjetas con iconos Unicode para mostrar la dualidad de la responsabilidad (Empresa vs. Empleado). Justificación: Simplifica un concepto legal complejo.
+        - Cadena de Reporte (Organizar/Proceso): Diagrama de flujo vertical con HTML/Tailwind. Justificación: Visualiza un proceso secuencial de forma más clara que el texto.
+        - Funciones del OC (Informar/Comparar): Gráfico de barras con Chart.js. Justificación: Cuantifica y compara las áreas de enfoque del OC para una comprensión rápida.
+        - Señales de Alerta (Informar/Explorar): Galería de tarjetas interactivas con JS. Justificación: Convierte conceptos abstractos en ejemplos concretos y explorables.
+        - Sanciones (Informar): Tabla HTML. Justificación: Estructura datos numéricos de forma clara.
+        - Todo implementado con HTML, Tailwind, Chart.js y Vanilla JS. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+            color: #212529;
+        }
+        .card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+        }
+        .nav-link {
+            transition: color 0.2s, border-bottom-color 0.2s;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        .alert-card {
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        .alert-card.active {
+            border-color: #007BFF;
+            transform: scale(1.03);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <div class="text-2xl font-bold text-gray-800">Guía PLAFT</div>
+            <div class="hidden md:flex space-x-6">
+                <a href="#responsabilidad" class="nav-link text-gray-600 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-600">Tu Rol</a>
+                <a href="#cadena-reporte" class="nav-link text-gray-600 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-600">Cadena de Reporte</a>
+                <a href="#oficial-cumplimiento" class="nav-link text-gray-600 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-600">El OC</a>
+                <a href="#alertas" class="nav-link text-gray-600 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-600">Señales de Alerta</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+
+        <section id="hero" class="text-center mb-20">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Prevenir es Responsabilidad de Todos</h1>
+            <p class="text-lg text-gray-600 max-w-3xl mx-auto">Esta guía interactiva te ayudará a entender tu papel fundamental en la lucha contra el lavado de activos y el financiamiento del terrorismo (LA/FT) en nuestro sector.</p>
+        </section>
+
+        <section id="responsabilidad" class="mb-20 scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold">Tu Rol en la Prevención</h2>
+                <p class="text-md text-gray-500 mt-2">La empresa tiene la responsabilidad legal, pero el sistema solo funciona con tu compromiso.</p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="card p-8 text-center">
+                    <div class="text-5xl mb-4">🏢</div>
+                    <h3 class="text-2xl font-bold mb-2">Responsabilidad de la Empresa</h3>
+                    <p class="text-gray-600">Implementar un Sistema de Prevención (SPLAFT), designar un Oficial de Cumplimiento y proveer los recursos necesarios para cumplir con la ley.</p>
+                </div>
+                <div class="card p-8 text-center bg-blue-600 text-white">
+                    <div class="text-5xl mb-4">🛡️</div>
+                    <h3 class="text-2xl font-bold mb-2">Tu Responsabilidad como Empleado</h3>
+                    <p>Conocer las políticas, identificar señales de alerta, reportar operaciones inusuales y mantener absoluta confidencialidad. Eres nuestra primera línea de defensa.</p>
+                </div>
+            </div>
+             <div class="card mt-8 p-8">
+                <h3 class="text-2xl font-bold mb-4">Tus Deberes Fundamentales</h3>
+                <ul id="employee-duties" class="space-y-4">
+                </ul>
+                <div class="mt-6 bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-md">
+                    <p class="font-bold">Estás Protegido por Ley</p>
+                    <p>Al reportar de buena fe una operación inusual, estás exento de responsabilidad penal, civil y administrativa. Tu identidad y tu estabilidad laboral están protegidas.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="cadena-reporte" class="mb-20 scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold">La Cadena de Reporte</h2>
+                <p class="text-md text-gray-500 mt-2">Un flujo de información claro y confidencial es clave para un reporte efectivo.</p>
+            </div>
+            <div class="max-w-2xl mx-auto">
+                <div class="space-y-4">
+                    <div class="card p-6 flex items-center space-x-4">
+                        <div class="bg-blue-100 text-blue-600 font-bold rounded-full h-12 w-12 flex items-center justify-center text-xl">1</div>
+                        <div>
+                            <h4 class="font-bold text-lg">Detección (Empleado)</h4>
+                            <p class="text-gray-600">Identificas una operación inusual o una señal de alerta.</p>
+                        </div>
+                    </div>
+                    <div class="flex justify-center"><div class="text-2xl text-gray-400">▼</div></div>
+                    <div class="card p-6 flex items-center space-x-4">
+                        <div class="bg-blue-100 text-blue-600 font-bold rounded-full h-12 w-12 flex items-center justify-center text-xl">2</div>
+                        <div>
+                            <h4 class="font-bold text-lg">Reporte Interno</h4>
+                            <p class="text-gray-600">Comunicas tus sospechas a tu supervisor o al Oficial de Cumplimiento por los canales establecidos.</p>
+                        </div>
+                    </div>
+                     <div class="flex justify-center"><div class="text-2xl text-gray-400">▼</div></div>
+                    <div class="card p-6 flex items-center space-x-4">
+                        <div class="bg-blue-100 text-blue-600 font-bold rounded-full h-12 w-12 flex items-center justify-center text-xl">3</div>
+                        <div>
+                            <h4 class="font-bold text-lg">Análisis (Oficial de Cumplimiento)</h4>
+                            <p class="text-gray-600">El OC analiza la operación y determina si califica como "sospechosa".</p>
+                        </div>
+                    </div>
+                     <div class="flex justify-center"><div class="text-2xl text-gray-400">▼</div></div>
+                    <div class="card p-6 flex items-center space-x-4 bg-red-50 border-l-4 border-red-500">
+                        <div class="bg-red-100 text-red-600 font-bold rounded-full h-12 w-12 flex items-center justify-center text-xl">4</div>
+                        <div>
+                            <h4 class="font-bold text-lg">Reporte Externo (ROS a la UIF)</h4>
+                            <p class="text-gray-600">Si es sospechosa, el OC la reporta a la UIF-Perú en un plazo máximo de 24 horas.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="oficial-cumplimiento" class="mb-20 scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold">El Oficial de Cumplimiento (OC): Tu Aliado</h2>
+                <p class="text-md text-gray-500 mt-2">Una figura clave, independiente y con recursos, para guiar y supervisar el sistema de prevención.</p>
+            </div>
+            <div class="grid md:grid-cols-5 gap-8">
+                <div class="md:col-span-2 card p-8">
+                    <h3 class="text-2xl font-bold mb-4">¿Quién es y qué hace?</h3>
+                    <p class="text-gray-600 mb-4">Es un gerente o jefe designado, experto en la normativa, que actúa como el nexo entre la empresa y la UIF-Perú. Su rol es asegurar que nuestro sistema de prevención funcione correctamente.</p>
+                    <div class="bg-gray-100 p-4 rounded-lg">
+                        <p class="font-semibold">¿Necesitas reportar o tienes dudas?</p>
+                        <p class="text-sm text-gray-700">Utiliza siempre los canales de comunicación internos establecidos en el Manual de Prevención. La identidad del OC y tus reportes son confidenciales.</p>
+                    </div>
+                </div>
+                <div class="md:col-span-3 card p-8">
+                     <h3 class="text-2xl font-bold mb-4 text-center">Distribución de sus Funciones</h3>
+                    <div class="chart-container">
+                        <canvas id="ocFunctionsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="alertas" class="mb-20 scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold">Señales de Alerta Clave</h2>
+                <p class="text-md text-gray-500 mt-2">Aprende a reconocer comportamientos que podrían indicar un intento de lavado de activos. Haz clic en una señal para ver más detalles.</p>
+            </div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" id="alerts-grid">
+            </div>
+            <div id="alert-details" class="mt-8 card p-8 bg-blue-50 hidden">
+                <h3 id="alert-detail-title" class="text-2xl font-bold mb-2"></h3>
+                <p id="alert-detail-description" class="text-gray-700"></p>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-800 text-white">
+        <div class="container mx-auto px-6 py-8 text-center">
+            <p>El cumplimiento es un compromiso continuo. Gracias por ser parte de la solución.</p>
+            <p class="text-sm text-gray-400 mt-2">&copy; 2025 Guía Interactiva PLAFT. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dutiesData = [
+                { icon: '📚', text: '<strong>Conocer y Aplicar:</strong> Entender y seguir el Manual de Prevención y el Código de Conducta.' },
+                { icon: '🔍', text: '<strong>Identificar y Reportar:</strong> Estar atento a las "señales de alerta" y comunicar cualquier operación inusual.' },
+                { icon: '🎓', text: '<strong>Capacitarte Continuamente:</strong> Participar en la inducción (primeros 30 días) y en la capacitación anual obligatoria.' },
+                { icon: '🤫', text: '<strong>Mantener Confidencialidad Absoluta:</strong> Nunca alertar a un cliente que está siendo observado o reportado (prohibición de "tipping-off").' }
+            ];
+
+            const dutiesContainer = document.getElementById('employee-duties');
+            dutiesData.forEach(duty => {
+                dutiesContainer.innerHTML += `
+                    <li class="flex items-start">
+                        <span class="text-2xl mr-4">${duty.icon}</span>
+                        <p class="text-gray-700">${duty.text}</p>
+                    </li>
+                `;
+            });
+            
+            const ocFunctionsData = {
+                labels: ['Supervisión del Sistema (SPLAFT)', 'Reporte de Operaciones (ROS/IAOC)', 'Capacitación al Personal', 'Gestión de Riesgos', 'Debida Diligencia'],
+                datasets: [{
+                    label: 'Peso de la Función',
+                    data: [30, 25, 20, 15, 10],
+                    backgroundColor: ['#007BFF', '#DC3545', '#28A745', '#FFC107', '#6C757D'],
+                    borderWidth: 0
+                }]
+            };
+
+            const ocFunctionsCtx = document.getElementById('ocFunctionsChart').getContext('2d');
+            new Chart(ocFunctionsCtx, {
+                type: 'doughnut',
+                data: ocFunctionsData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                font: { size: 12 },
+                                color: '#495057'
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed !== null) {
+                                        label += context.parsed + '%';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const alertsData = [
+                { title: 'Cliente que no juega', description: 'Personas que cambian grandes cantidades de dinero por fichas, pero juegan muy poco o nada, y luego cobran las fichas.' },
+                { title: 'Uso de Múltiples Tarjetas', description: 'Un cliente utiliza diversas tarjetas de débito/crédito o de diferentes personas para comprar fichas en montos pequeños para evitar los umbrales de registro.' },
+                { title: 'Estructuración o "Pitufeo"', description: 'Varios individuos realizan operaciones por separado que, en conjunto, suman una gran cantidad, con el fin de que cada operación individual esté por debajo del umbral de reporte.' },
+                { title: 'Preguntas sobre Reportes', description: 'Clientes que preguntan insistentemente sobre los umbrales de reporte, o cómo pueden evitar que sus transacciones sean informadas a las autoridades.' },
+                { title: 'Premios Cobrados por Terceros', description: 'Un jugador gana un premio significativo, pero pide que el cheque o el pago se emita a nombre de otra persona sin una razón lógica.' },
+                { title: 'Nerviosismo Inusual', description: 'Clientes que se muestran excesivamente nerviosos, evasivos o sospechosos al proporcionar su información de identificación para transacciones que lo requieren.' }
+            ];
+
+            const alertsGrid = document.getElementById('alerts-grid');
+            const alertDetails = document.getElementById('alert-details');
+            const alertDetailTitle = document.getElementById('alert-detail-title');
+            const alertDetailDescription = document.getElementById('alert-detail-description');
+
+            alertsData.forEach((alert, index) => {
+                const card = document.createElement('div');
+                card.className = 'card p-6 alert-card';
+                card.innerHTML = `<h4 class="font-bold text-lg">${alert.title}</h4>`;
+                card.dataset.index = index;
+                alertsGrid.appendChild(card);
+            });
+
+            alertsGrid.addEventListener('click', function(e) {
+                const card = e.target.closest('.alert-card');
+                if (!card) return;
+
+                document.querySelectorAll('.alert-card').forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+
+                const alertData = alertsData[card.dataset.index];
+                alertDetailTitle.textContent = alertData.title;
+                alertDetailDescription.textContent = alertData.description;
+                alertDetails.classList.remove('hidden');
+                
+                alertDetails.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            });
+        });
+    </script>
+
+</body>
+</html>
