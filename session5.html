@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capacitación Interactiva: Módulo 3 - ROS en Salas de Juego</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals & Gold -->
+    <!-- Application Structure Plan: The SPA is designed as a task-oriented interactive dashboard for casino staff. Instead of a linear report, it's structured around a user's learning journey: 1. "Mi Deber de Vigilar" (Why it's important), 2. "Señales de Alerta" (What to look for - using interactive cards), 3. "Proceso de Reporte" (How to act - a visual flowchart), 4. "Simulador de Casos" (Practice and test knowledge), and 5. "Consecuencias" (Why compliance matters - with a data visualization). This structure prioritizes actionability and knowledge retention for the target audience over simply replicating the source document's layout. -->
+    <!-- Visualization & Content Choices: The report's content is transformed into interactive components. Goal: Inform -> Presentation: Interactive cards for "Red Flags" with hover/click details (HTML/JS). Goal: Explain Process -> Presentation: A step-by-step visual flowchart (HTML/Tailwind). Goal: Test Knowledge -> Presentation: An interactive quiz/simulator with immediate feedback (HTML/JS). Goal: Show Impact -> Presentation: An interactive bar chart visualizing UIT fines (Chart.js). This approach makes dense information digestible and engaging, confirming NO SVG/Mermaid is used. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8F9FA;
+            color: #212529;
+        }
+        .card-flip {
+            perspective: 1000px;
+        }
+        .card-flip-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .card-flip:hover .card-flip-inner {
+            transform: rotateY(180deg);
+        }
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            border-radius: 0.5rem;
+        }
+        .card-back {
+            transform: rotateY(180deg);
+            background-color: #4A5568;
+            color: white;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 50vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 500px;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <div class="text-2xl font-bold text-gray-800">Módulo 3: <span class="text-amber-600">ROS</span></div>
+            <div class="hidden md:flex space-x-6">
+                <a href="#deber" class="text-gray-600 hover:text-amber-600">Mi Deber</a>
+                <a href="#alertas" class="text-gray-600 hover:text-amber-600">Señales de Alerta</a>
+                <a href="#proceso" class="text-gray-600 hover:text-amber-600">Proceso de Reporte</a>
+                <a href="#simulador" class="text-gray-600 hover:text-amber-600">Simulador</a>
+                <a href="#sanciones" class="text-gray-600 hover:text-amber-600">Sanciones</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8">
+
+        <section id="deber" class="my-12 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4">Su Rol es Clave en la Prevención</h1>
+            <p class="max-w-3xl mx-auto text-lg text-gray-600">
+                Como personal de primera línea, usted es la barrera de defensa más importante contra el Lavado de Activos (LA) y el Financiamiento del Terrorismo (FT). Su capacidad para identificar y reportar actividades inusuales protege a nuestra empresa, cumple con la ley y combate el crimen. Esta herramienta está diseñada para darle el conocimiento práctico que necesita para actuar con confianza y seguridad.
+            </p>
+        </section>
+
+        <hr class="my-16">
+
+        <section id="alertas" class="my-12">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800">Señales de Alerta Interactivas</h2>
+                <p class="mt-2 text-gray-600 max-w-2xl mx-auto">Explore las señales de alerta más comunes. Pase el cursor sobre cada tarjeta para descubrir qué hacer.</p>
+            </div>
+
+            <div id="alert-cards-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            </div>
+        </section>
+
+        <hr class="my-16">
+
+        <section id="proceso" class="my-12">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800">El Proceso de Reporte (ROS)</h2>
+                <p class="mt-2 text-gray-600 max-w-2xl mx-auto">Cuando detecte una señal de alerta, siga estos pasos de forma calmada y confidencial.</p>
+            </div>
+            <div class="relative">
+                <div class="hidden md:block absolute top-1/2 left-0 w-full h-1 bg-gray-300 -translate-y-1/2"></div>
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-8 text-center relative">
+                    <div class="flex flex-col items-center">
+                        <div class="bg-amber-500 text-white rounded-full h-16 w-16 flex items-center justify-center text-2xl font-bold z-10">1</div>
+                        <h3 class="font-bold mt-4 text-lg">Detectar</h3>
+                        <p class="text-sm text-gray-600 mt-1">Observe un comportamiento o transacción inusual de la lista de alertas.</p>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <div class="bg-amber-500 text-white rounded-full h-16 w-16 flex items-center justify-center text-2xl font-bold z-10">2</div>
+                        <h3 class="font-bold mt-4 text-lg">Documentar</h3>
+                        <p class="text-sm text-gray-600 mt-1">Anote discretamente los detalles: fecha, hora, monto, descripción del cliente y la situación.</p>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <div class="bg-amber-500 text-white rounded-full h-16 w-16 flex items-center justify-center text-2xl font-bold z-10">3</div>
+                        <h3 class="font-bold mt-4 text-lg">Escalar</h3>
+                        <p class="text-sm text-gray-600 mt-1">Informe inmediatamente a su supervisor o al Oficial de Cumplimiento (OC).</p>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <div class="bg-red-600 text-white rounded-full h-16 w-16 flex items-center justify-center text-2xl font-bold z-10">!</div>
+                        <h3 class="font-bold mt-4 text-lg text-red-600">¡No Alertar!</h3>
+                        <p class="text-sm text-gray-600 mt-1">Nunca revele al cliente ni a terceros que se está considerando un reporte ("Tipping-Off"). Es ilegal y peligroso.</p>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <div class="bg-gray-700 text-white rounded-full h-16 w-16 flex items-center justify-center text-2xl font-bold z-10">OC</div>
+                        <h3 class="font-bold mt-4 text-lg">Análisis del OC</h3>
+                        <p class="text-sm text-gray-600 mt-1">El Oficial de Cumplimiento analizará el caso y determinará si se debe presentar un ROS a la UIF-Perú.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-16">
+
+        <section id="simulador" class="my-12">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800">Simulador de Casos Prácticos</h2>
+                <p class="mt-2 text-gray-600 max-w-2xl mx-auto">Ponga a prueba sus conocimientos. Lea el caso y seleccione la mejor respuesta.</p>
+            </div>
+            <div class="bg-white p-8 rounded-lg shadow-lg max-w-4xl mx-auto">
+                <div id="quiz-container">
+                </div>
+                <div class="mt-6 flex justify-between items-center">
+                    <button id="prev-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded disabled:opacity-50">Anterior</button>
+                    <div id="progress-indicator" class="text-sm text-gray-600"></div>
+                    <button id="next-btn" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-4 rounded disabled:opacity-50">Siguiente</button>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-16">
+
+        <section id="sanciones" class="my-12">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800">Consecuencias del Incumplimiento</h2>
+                <p class="mt-2 text-gray-600 max-w-2xl mx-auto">No cumplir con las obligaciones de prevención tiene costos financieros, penales y reputacionales muy altos.</p>
+            </div>
+            <div class="bg-white p-4 md:p-8 rounded-lg shadow-lg">
+                <h3 class="text-xl font-bold text-center mb-4">Multas Administrativas (en UIT)</h3>
+                <div class="chart-container">
+                    <canvas id="sancionesChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-800 text-white mt-16">
+        <div class="container mx-auto p-6 text-center text-sm">
+            <p>&copy; 2025 Capacitación Interna. Este material es confidencial y para uso exclusivo del personal.</p>
+            <p class="mt-1">El cumplimiento de las normativas de prevención de LA/FT es responsabilidad de todos.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            const alertData = [
+                {
+                    title: 'Estructuración',
+                    icon: '💸',
+                    description: 'Cliente realiza múltiples transacciones de efectivo justo por debajo del umbral de reporte (ej. S/ 30,000 o $9,900).',
+                    implication: 'Placement (Colocación)',
+                    action: 'Observar y documentar el patrón. Notificar discretamente al supervisor/OC.'
+                },
+                {
+                    title: 'Juego Mínimo',
+                    icon: '🎰',
+                    description: 'Patrón deposita grandes sumas, juega muy poco o con bajo riesgo, y luego intenta retirar la mayoría como "ganancias".',
+                    implication: 'Layering/Integration (Estratificación/Integración)',
+                    action: 'Observar patrón de juego vs. transacciones. Escalar al supervisor/OC.'
+                },
+                {
+                    title: 'Nerviosismo/Evasión',
+                    icon: '👤',
+                    description: 'Cliente se muestra nervioso, irritable o evasivo al ser solicitado a identificarse o dar información.',
+                    implication: 'Ocultamiento de identidad/origen de fondos.',
+                    action: 'Mantener la calma, documentar el comportamiento. Notificar discretamente al supervisor/OC.'
+                },
+                {
+                    title: 'Uso de Terceros',
+                    icon: '👥',
+                    description: 'Dos o más individuos se pasan fichas/efectivo, o uno intenta cobrar ganancias con la tarjeta de otro.',
+                    implication: 'Colusión, "chip dumping" (Layering)',
+                    action: 'Observar la interacción y registrar identidades. Notificar al supervisor/OC.'
+                },
+                {
+                    title: '"Bill Stuffing"',
+                    icon: '🎟️',
+                    description: 'Cliente inserta mucho efectivo en tragamonedas, juega mínimamente y canjea el ticket TITO.',
+                    implication: 'Placement/Layering (Colocación/Estratificación)',
+                    action: 'Monitorear actividad de la máquina y TITO. Notificar al supervisor/OC.'
+                },
+                {
+                    title: 'Negativa a dar Info',
+                    icon: '🚫',
+                    description: 'Cliente se niega a revelar fuente de fondos/ingresos o proporciona información vaga/inconsistente.',
+                    implication: 'Ocultamiento de origen ilícito de fondos.',
+                    action: 'Documentar la negativa. Escalar al supervisor/OC para evaluación.'
+                },
+                {
+                    title: 'Preguntas sobre Reportes',
+                    icon: '❓',
+                    description: 'Cliente realiza consultas inusuales sobre los umbrales o políticas de reporte de la empresa a las autoridades.',
+                    implication: 'Intento de evadir controles.',
+                    action: 'Documentar la consulta. Notificar discretamente al supervisor/OC.'
+                },
+                {
+                    title: 'División de Premios',
+                    icon: '✂️',
+                    description: 'Ganador de un premio grande solicita dividir el pago en varios cheques a nombre de distintas personas.',
+                    implication: 'Uso de terceros para ocultar fondos.',
+                    action: 'Explicar que el pago debe ser al ganador registrado. Documentar y notificar al OC.'
+                }
+            ];
+
+            const alertCardsContainer = document.getElementById('alert-cards-container');
+            alertData.forEach(alert => {
+                const card = document.createElement('div');
+                card.className = 'card-flip h-48 bg-white rounded-lg shadow-md cursor-pointer';
+                card.innerHTML = `
+                    <div class="card-flip-inner">
+                        <div class="card-front bg-white border border-gray-200">
+                            <div class="text-4xl">${alert.icon}</div>
+                            <h3 class="font-bold text-lg mt-2">${alert.title}</h3>
+                            <p class="text-xs text-gray-500 mt-1">${alert.description}</p>
+                        </div>
+                        <div class="card-back">
+                            <h4 class="font-bold text-amber-300">Acción Inmediata:</h4>
+                            <p class="text-sm mt-1">${alert.action}</p>
+                            <p class="text-xs mt-3 italic opacity-70">Implicación: ${alert.implication}</p>
+                        </div>
+                    </div>
+                `;
+                alertCardsContainer.appendChild(card);
+            });
+
+            const quizData = [
+                {
+                    case: "Un cliente se acerca a la caja para cambiar S/ 20,000 en efectivo. Cuando usted le solicita su DNI para el registro obligatorio, se pone irritable y dice: 'Nunca me lo han pedido, ¿cuál es el problema? No pienso darte mis datos'. Luego se retira.",
+                    question: "¿Cuál es la señal de alerta principal en esta situación?",
+                    options: [
+                        "El monto de la transacción.",
+                        "La negativa a identificarse y el comportamiento evasivo.",
+                        "El tipo de billetes que presenta.",
+                        "Que el cliente se haya retirado."
+                    ],
+                    correct: 1,
+                    feedback: "Correcto. La negativa a proporcionar identificación, especialmente para una operación sobre el umbral legal, es una señal de alerta crítica."
+                },
+                {
+                    case: "Continuando con el caso anterior, el cliente se ha retirado sin completar la operación.",
+                    question: "¿Qué debe hacer usted inmediatamente después?",
+                    options: [
+                        "Olvidar el incidente ya que no se completó la transacción.",
+                        "Seguir al cliente para intentar convencerlo.",
+                        "Documentar el intento de operación y el comportamiento del cliente, y reportarlo discretamente a su supervisor o al Oficial de Cumplimiento.",
+                        "Comentar la situación con otros compañeros para ver si lo conocen."
+                    ],
+                    correct: 2,
+                    feedback: "Exacto. Aunque la operación no se concretó, el intento es en sí una operación sospechosa que debe ser reportada internamente. La confidencialidad es clave."
+                },
+                {
+                    case: "Un cliente gana un premio de S/ 15,000 y solicita que se emitan dos cheques: uno de S/ 5,000 a su nombre y otro de S/ 10,000 a nombre de un amigo que no está presente. Argumenta que es 'para evitar impuestos'.",
+                    question: "¿Esta solicitud constituye una señal de alerta?",
+                    options: [
+                        "No, es una petición razonable para gestionar sus finanzas.",
+                        "Sí, porque intenta dividir el premio y usar a un tercero, lo cual es una táctica para ocultar el beneficiario final de los fondos.",
+                        "Solo si el amigo tiene antecedentes penales.",
+                        "No, mientras el monto total sea el correcto."
+                    ],
+                    correct: 1,
+                    feedback: "Correcto. La solicitud de dividir un premio y pagarlo a un tercero es una clara señal de alerta. El pago siempre debe realizarse al ganador verificado."
+                },
+                {
+                    case: "Usted observa a un cliente que inserta billetes en varias máquinas tragamonedas, acumulando S/ 5,000 en tickets TITO. Sin embargo, apenas juega y pasa la mayor parte del tiempo observando. Luego, intenta canjear todos los tickets por efectivo.",
+                    question: "¿Qué nombre recibe esta técnica de lavado de dinero?",
+                    options: [
+                        "Estructuración.",
+                        "Chip Dumping.",
+                        "Bill Stuffing.",
+                        "Juego de bajo riesgo."
+                    ],
+                    correct: 2,
+                    feedback: "Muy bien. Esta técnica se conoce como 'Bill Stuffing' y busca convertir efectivo de origen posiblemente ilícito en un ticket de apariencia legítima emitido por el casino."
+                }
+            ];
+
+            const quizContainer = document.getElementById('quiz-container');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const progressIndicator = document.getElementById('progress-indicator');
+            let currentQuestionIndex = 0;
+            let userAnswers = new Array(quizData.length).fill(null);
+
+            function renderQuiz() {
+                const q = quizData[currentQuestionIndex];
+                let optionsHtml = '';
+                q.options.forEach((option, index) => {
+                    let bgClass = 'bg-white';
+                    if (userAnswers[currentQuestionIndex] !== null) {
+                        if (index === q.correct) {
+                            bgClass = 'bg-green-100 border-green-500';
+                        } else if (index === userAnswers[currentQuestionIndex]) {
+                            bgClass = 'bg-red-100 border-red-500';
+                        }
+                    }
+                    optionsHtml += `
+                        <label class="block p-4 rounded-lg border ${userAnswers[currentQuestionIndex] !== null ? 'cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50'} ${bgClass}">
+                            <input type="radio" name="quizOption" value="${index}" class="mr-3" ${userAnswers[currentQuestionIndex] !== null ? 'disabled' : ''}>
+                            ${option}
+                        </label>
+                    `;
+                });
+
+                quizContainer.innerHTML = `
+                    <p class="text-sm text-gray-500 mb-2">Caso de Estudio:</p>
+                    <p class="mb-6 text-gray-700">${q.case}</p>
+                    <p class="font-bold mb-4">${q.question}</p>
+                    <div class="space-y-3">${optionsHtml}</div>
+                    <div id="feedback" class="mt-4 p-3 rounded-lg text-sm ${userAnswers[currentQuestionIndex] !== null ? (userAnswers[currentQuestionIndex] === q.correct ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800') : 'hidden'}">
+                        ${userAnswers[currentQuestionIndex] !== null ? q.feedback : ''}
+                    </div>
+                `;
+
+                updateNav();
+                addOptionListeners();
+            }
+
+            function addOptionListeners() {
+                if (userAnswers[currentQuestionIndex] === null) {
+                    const options = quizContainer.querySelectorAll('input[name="quizOption"]');
+                    options.forEach(option => {
+                        option.addEventListener('change', (e) => {
+                            userAnswers[currentQuestionIndex] = parseInt(e.target.value);
+                            renderQuiz();
+                        });
+                    });
+                }
+            }
+
+            function updateNav() {
+                progressIndicator.textContent = `Pregunta ${currentQuestionIndex + 1} de ${quizData.length}`;
+                prevBtn.disabled = currentQuestionIndex === 0;
+                nextBtn.disabled = currentQuestionIndex === quizData.length - 1;
+            }
+
+            prevBtn.addEventListener('click', () => {
+                if (currentQuestionIndex > 0) {
+                    currentQuestionIndex--;
+                    renderQuiz();
+                }
+            });
+
+            nextBtn.addEventListener('click', () => {
+                if (currentQuestionIndex < quizData.length - 1) {
+                    currentQuestionIndex++;
+                    renderQuiz();
+                }
+            });
+
+            renderQuiz();
+
+            const sancionesData = {
+                labels: [
+                    'No designar OC', 
+                    'No tener Manual/Código', 
+                    'No hacer KYC básico', 
+                    'No conservar RO (5 años)', 
+                    'No reportar ROS', 
+                    'No tener REGAP',
+                    'Revelar info. confidencial (Tipping-off)'
+                ],
+                datasets: [{
+                    label: 'Multa Máxima (UIT)',
+                    data: [20, 4, 5, 5, 7, 7, 7],
+                    backgroundColor: 'rgba(180, 83, 9, 0.6)',
+                    borderColor: 'rgba(180, 83, 9, 1)',
+                    borderWidth: 1
+                }]
+            };
+
+            const ctx = document.getElementById('sancionesChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: sancionesData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Monto de Multa en UIT'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y + ' UIT';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
